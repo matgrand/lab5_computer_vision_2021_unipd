@@ -11,6 +11,7 @@ PanoramicImage::PanoramicImage(){
 void PanoramicImage::load_and_project_imgs(String img_folder_path, double half_fov) {
 	vector<String> img_filenames;
 	utils::fs::glob(img_folder_path, "*.bmp", img_filenames);
+	utils::fs::glob(img_folder_path, "*.png", img_filenames);
 	//add the projected images to imgs
 	for (int i = 0; i < size(img_filenames); i++) {
 		Mat tmp_img = imread(img_filenames[i]);
@@ -61,8 +62,8 @@ void PanoramicImage::find_translations(double ratio) {
 		vector<Point2f> src_pts;
 		vector<Point2f> dst_pts;
 
-		vector<int> dx_vec;
-		vector<int> dy_vec;
+		vector<float> dx_vec;
+		vector<float> dy_vec;
 
 		for (int j = 0; j < matches.size()-1; j++) {
 			if (matches[j][0].distance < ratio * matches[j][1].distance) {
@@ -80,11 +81,11 @@ void PanoramicImage::find_translations(double ratio) {
 		}
 		
 		//calculate mean distance
-		//float dx_avg  = accumulate(dx_vec.begin(), dx_vec.end(), 0.0) /  size(good_matches);
+		float dx_avg = accumulate(dx_vec.begin(), dx_vec.end(), 0.0) / size(good_matches);
 		float dy_avg = accumulate(dy_vec.begin(), dy_vec.end(), 0.0) / size(good_matches);
 		
 		//calculate mode
-		int dx_avg = mode(dx_vec);
+		//int dx_avg = mode(dx_vec);
 		//int dy_avg = mode(dy_vec);
 
 		//push em
@@ -123,9 +124,6 @@ Mat PanoramicImage::compute_panorama() {
 		
 		bef_cut = dx_avgs[i-1] - dx_avgs[i-1] / 2;
 		aft_cut = dx_avgs[i] / 2;
-
-		cout << "HIIIII " << i << endl;
-
 		x_disp.push_back(cropped_imgs[i-1].cols + x_disp[i-1]);
 		cropped_imgs.push_back(imgs[i].colRange(bef_cut, imgs[i].cols - aft_cut));
 	}
