@@ -1,5 +1,8 @@
 #include "PanoramicImage.h"
+#include <numeric>
 
+
+float mode(vector<int> v);
 
 PanoramicImage::PanoramicImage(){
 
@@ -58,8 +61,8 @@ void PanoramicImage::find_translations(double ratio) {
 		vector<Point2f> src_pts;
 		vector<Point2f> dst_pts;
 
-		float dx_accumulator = 0;
-		float dy_accumulator = 0;
+		vector<int> dx_vec;
+		vector<int> dy_vec;
 
 		for (int j = 0; j < matches.size()-1; j++) {
 			if (matches[j][0].distance < ratio * matches[j][1].distance) {
@@ -69,14 +72,20 @@ void PanoramicImage::find_translations(double ratio) {
 				Point2f p2 = kp_vector[i + 1][good_match.trainIdx].pt;
 				src_pts.push_back(p1); //add the first image point from the current good match 
 				dst_pts.push_back(p2); //add the second image point from the current good match
-				//calculate points distance		
-				dx_accumulator += p1.x - p2.x;
-				dy_accumulator += p1.y - p2.y;
+				
+				// points distance		
+				dx_vec.push_back(abs(p1.x - p2.x));
+				dy_vec.push_back(p1.y - p2.y);
 			}
 		}
-		//calculate avarage distance
-		float dx_avg = dx_accumulator / size(good_matches);
-		float dy_avg = dy_accumulator / size(good_matches);
+		
+		//calculate mean distance
+		//float dx_avg  = accumulate(dx_vec.begin(), dx_vec.end(), 0.0) /  size(good_matches);
+		float dy_avg = accumulate(dy_vec.begin(), dy_vec.end(), 0.0) / size(good_matches);
+		
+		//calculate mode
+		int dx_avg = mode(dx_vec);
+		//int dy_avg = mode(dy_vec);
 
 		//push em
 		dx_avgs.push_back(cvRound(dx_avg));
@@ -173,4 +182,13 @@ Mat PanoramicImage::compute_panorama() {
 
 
 
+float mode(std::vector<int> vec) {
+	int size = vec.size();
+	int max = *max_element(std::begin(vec), std::end(vec));
 
+	std::vector<int> histogram(max+1, 0);
+	for (int i = 0; i < vec.size(); i++)
+		histogram[vec[i]] += 1;
+	
+	return std::max_element(histogram.begin(), histogram.end()) - histogram.begin();
+}
