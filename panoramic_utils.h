@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <iostream>
-
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
@@ -20,7 +19,7 @@ public:
       const double angle)
   {
     cv::Mat tmp,result;
-    cv::cvtColor(image, tmp, CV_BGR2GRAY);
+    cv::cvtColor(image, tmp, 7); //COLOR_RGB2GRAY = 7
     result = tmp.clone();
 
 

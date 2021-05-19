@@ -1,0 +1,3 @@
+C:/Users/irong/Documents/University_Offline/Magistrale_control_systems/Computer_vision/lab5/build/CMakeFiles/lab5_Grandin_Matteo_2020374.dir
+C:/Users/irong/Documents/University_Offline/Magistrale_control_systems/Computer_vision/lab5/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/irong/Documents/University_Offline/Magistrale_control_systems/Computer_vision/lab5/build/CMakeFiles/ZERO_CHECK.dir
