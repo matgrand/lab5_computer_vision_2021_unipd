@@ -31,12 +31,12 @@ void PanoramicImage::find_features() {
 	cv::Ptr<SIFT> siftPtr = SIFT::create();
 	for (int i = 0; i < size(imgs); i++) {
 		siftPtr->detectAndCompute(imgs[i],sift_masks[i], kp_vector[i], sift_descriptors[i], false);
-		/*
-		Mat output;
-		drawKeypoints(imgs[i], kp_vector[i], output);
-		imshow("dfdsfsd", output);
-		waitKey(0);
-		*/
+		if (SLOW_MODE) {
+			Mat output;
+			drawKeypoints(imgs[i], kp_vector[i], output);
+			imshow("dfdsfsd", output);
+			waitKey(0);
+		}
 	}
 }
 
@@ -79,18 +79,20 @@ void PanoramicImage::find_translations(double ratio) {
 		float dy_avg = dy_accumulator / size(good_matches);
 
 		//push em
-		dx_avgs.push_back(dx_avg);
-		dy_avgs.push_back(dy_avg);
+		dx_avgs.push_back(cvRound(dx_avg));
+		dy_avgs.push_back(cvRound(dy_avg));
 
 		std::cout << "dx_avg = " << dx_avg << endl;
 		std::cout << "dy_avg = " << dy_avg << endl;
 
 		good_matches_vec.push_back(good_matches); //add this vector of good matches to the vector of vectors of good matches
 
-		//Mat out;
-		//cv::drawMatches(imgs[i], kp_vector[i], imgs[i+1], kp_vector[i + 1], good_matches, out);
-		//cv::imshow("Matches", out);
-		//cv::waitKey(0);
+		if (SLOW_MODE) {
+			Mat out;
+			cv::drawMatches(imgs[i], kp_vector[i], imgs[i+1], kp_vector[i + 1], good_matches, out);
+			cv::imshow("Matches", out);
+			cv::waitKey(0);
+		}
 	}
 }
 
@@ -100,51 +102,71 @@ void PanoramicImage::find_translations(double ratio) {
 
 Mat PanoramicImage::compute_panorama() {
 	int out_rows = imgs[0].rows;
-	int out_cols = imgs[0].cols;
+	int out_cols = 0;
+
 	
-	for (int i = 0; i < dx_avgs.size(); i++) {
-		out_cols += imgs[i + 1].cols - cvRound(dx_avgs[i]);
+	//get x displacement and crop each image
+	int bef_cut = 0;
+	int aft_cut = imgs[0].cols - (dx_avgs[0] - dx_avgs[0] / 2);
+	vector<int> x_disp = {0};
+	vector<Mat> cropped_imgs = {imgs[0].colRange(0,aft_cut)};
+	for (int i = 1; i < dx_avgs.size(); i++) {
+		
+		bef_cut = dx_avgs[i-1] - dx_avgs[i-1] / 2;
+		aft_cut = dx_avgs[i] / 2;
+
+		cout << "HIIIII " << i << endl;
+
+		x_disp.push_back(cropped_imgs[i-1].cols + x_disp[i-1]);
+		cropped_imgs.push_back(imgs[i].colRange(bef_cut, imgs[i].cols - aft_cut));
+	}
+	x_disp.push_back(cropped_imgs[cropped_imgs.size() - 1].cols + x_disp[x_disp.size() - 1]);
+	cropped_imgs.push_back(imgs[imgs.size()-1].colRange(dx_avgs[dx_avgs.size()-1] - aft_cut, imgs[imgs.size() - 1].cols));
+
+	//show images
+	if (SLOW_MODE) {
+		for (int i = 0; i < cropped_imgs.size(); i++) {
+			imshow("sdfdsf", cropped_imgs[i]);
+			cout << "x_disp = " << x_disp[i] << "    witdth = " << cropped_imgs[i].cols << endl;
+			waitKey(0); //slow mode
+		}
+	}
+	//calculate #cols
+	cout << "# of cropped images = " << cropped_imgs.size() << endl;
+	out_cols = 0;
+	for (int i = 0; i < cropped_imgs.size(); i++) {
+		out_cols += cropped_imgs[i].cols;
+	}
+
+	//calculate # rows
+	vector<int> dy_prog_sum = {0};
+	int dy_acc = 0;
+	for (int i = 0; i < dy_avgs.size(); i++) {
+		dy_acc += dy_avgs[i];
+		dy_prog_sum.push_back(dy_acc);
+	}
+	//find max and min dy
+	int max_dy = *max_element(dy_prog_sum.begin(), dy_prog_sum.end());
+	int min_dy = *min_element(dy_prog_sum.begin(), dy_prog_sum.end());
+	out_rows = imgs[0].rows + max_dy - min_dy;
+
+	//get y displacement for each image
+	vector<int> y_disp;
+	for (int i = 0; i < dy_prog_sum.size(); i++) {
+		y_disp.push_back(dy_prog_sum[i] - min_dy);
+		cout << "y_disp = " << y_disp[i] << endl;
 	}
 
 	cout << "Single image is " << imgs[0].rows << " x " << imgs[0].cols << endl;
 	cout << "Full panorama is " << out_rows << " x " << out_cols << endl;
 
+	Mat out = Mat::zeros(Size(out_cols, out_rows), cropped_imgs[0].type());
 
-	Mat out = Mat::zeros(Size(out_cols, out_rows), imgs[0].type());
-
-	///*
-	Mat m0 = out.colRange(0, imgs[0].cols);
-	imgs[0].copyTo(m0);
-
-	int cols_acc = imgs[0].cols;
-	for (int i = 0; i < dx_avgs.size(); i++) {
-		Mat tmp_img = imgs[i + 1];
-		cols_acc += tmp_img.cols - cvRound(dx_avgs[i]);
-		Mat mi = out.colRange(cols_acc-tmp_img.cols, cols_acc);
-		//equalizeHist(tmp_img, tmp_img); //made it worse
-		tmp_img.copyTo(mi);
+	//compose the image
+	for (int i = 0; i < cropped_imgs.size(); i++) {
+		Mat mi = out(Rect(x_disp[i], y_disp[i], cropped_imgs[i].cols, cropped_imgs[i].rows));
+		cropped_imgs[i].copyTo(mi);
 	}
-	//*/
-
-	/*
-	//backwards
-	int last_elem = dx_avgs.size() - 1;
-	Mat mlast = out.colRange(out_cols- imgs[last_elem].cols, out_cols);
-	imgs[0].copyTo(mlast);
-
-	int cols_acc = out_cols - imgs[last_elem].cols;
-	for (int i = last_elem; i > 0; i--) {
-		cout << "Im here " << i << endl;
-		Mat tmp_img = imgs[i + 1];
-		cols_acc += tmp_img.cols - dx_avgs[i];
-		Mat mi = out.colRange(cols_acc - tmp_img.cols, cols_acc);
-		//equalizeHist(tmp_img, tmp_img); //made it worse
-		Mat tmp_mask = Mat::ones(out.size(), out.type());
-		tmp_img.copyTo(mi, tmp_mask.colRange(cols_acc - tmp_img.cols, cols_acc + 1));
-	}
-	*/
-
-
 
 	return out;
 }

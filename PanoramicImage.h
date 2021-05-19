@@ -2,6 +2,8 @@
 #include <opencv2/core/utils/filesystem.hpp>
 #include "panoramic_utils.h"
 
+#define SLOW_MODE false
+
 using namespace cv;
 using namespace std;
 
@@ -33,8 +35,8 @@ public:
 	vector<vector<vector<DMatch>>> matches_vec;
 	vector<vector<DMatch>> good_matches_vec;
 
-	vector<float> dx_avgs;
-	vector<float> dy_avgs;
+	vector<int> dx_avgs;
+	vector<int> dy_avgs;
 
 };
 
