@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31105.61
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lab5_Grandin_Matteo_2020374", "lab5_Grandin_Matteo_2020374.vcxproj", "{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		MinSizeRel|x64 = MinSizeRel|x64
+		Release|x64 = Release|x64
+		RelWithDebInfo|x64 = RelWithDebInfo|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.Debug|x64.ActiveCfg = Debug|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.Debug|x64.Build.0 = Debug|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.MinSizeRel|x64.ActiveCfg = MinSizeRel|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.Release|x64.ActiveCfg = Release|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.Release|x64.Build.0 = Release|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
+		{71C178A7-BA49-3B44-A9CB-FC5D4BBAF058}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {634F7503-C9C7-3B21-A205-20FCB5268FAE}
+	EndGlobalSection
+EndGlobal
