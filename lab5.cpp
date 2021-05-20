@@ -9,10 +9,10 @@ using namespace std;
 const double default_half_fov = 33;
 const string default_img_directory_path = "../data/";
 
-const double lowe_ratio = 0.4;
+const double lowe_ratio = 1;
 
 
-//>> lab5 dir_path half_fov
+//>> lab5 dir_path half_fo
 
 int main(int argc, char* argv[]) {
 	

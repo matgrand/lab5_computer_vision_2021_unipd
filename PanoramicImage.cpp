@@ -1,6 +1,7 @@
 #include "PanoramicImage.h"
 #include <numeric>
 
+#define SLOW_MODE true //set it to true to see the different steps of the program
 
 float mode(vector<int> v);
 
@@ -52,19 +53,25 @@ void PanoramicImage::find_translations(double ratio) {
 	dx_avgs = {};
 	dy_avgs = {};
 
+	vector<vector<DMatch>> matches_homo_vec;
+
 	for (int i = 0; i < size(imgs)-1; i++) {
-	
-		bf.knnMatch(sift_descriptors[i], sift_descriptors[i+1], matches_vec[i], 2); //try sift_masks[i] instead of noArray
+		
+		cout << endl << "###### Image " << i << endl;
+
+		bf.knnMatch(sift_descriptors[i], sift_descriptors[i+1], matches_vec[i], 2); 
 
 		//keep only good matches, nearest neighbor distance ratio matching (not specified like this in handout)
 		vector<vector<DMatch>> matches = matches_vec[i];
 		vector<DMatch> good_matches;
+		vector<DMatch> very_good_matches;
 		vector<Point2f> src_pts;
 		vector<Point2f> dst_pts;
 
 		vector<float> dx_vec;
 		vector<float> dy_vec;
 
+		//lowe ratio test
 		for (int j = 0; j < matches.size()-1; j++) {
 			if (matches[j][0].distance < ratio * matches[j][1].distance) {
 				DMatch good_match = matches[j][0];
@@ -73,37 +80,62 @@ void PanoramicImage::find_translations(double ratio) {
 				Point2f p2 = kp_vector[i + 1][good_match.trainIdx].pt;
 				src_pts.push_back(p1); //add the first image point from the current good match 
 				dst_pts.push_back(p2); //add the second image point from the current good match
-				
-				// points distance		
-				dx_vec.push_back(abs(p1.x - p2.x));
-				dy_vec.push_back(p1.y - p2.y);
+
+
 			}
 		}
-		
+
+		cout << "Initial Matches = " << matches.size();
+		cout <<",   After Lowe ratio test = " << good_matches.size() << endl;
+	
+		Mat inliers_mask;
+		Mat H = findHomography(src_pts, dst_pts, inliers_mask, RANSAC);
+		H_vec.push_back(H);
+
+		//keep only good points
+		vector<Point2f> good_points1;
+		vector<Point2f> good_points2;
+		for (int j = 0; j < inliers_mask.rows; j++) {
+			if (inliers_mask.at<char>(j,0)> 0) {
+				very_good_matches.push_back(good_matches[j]);
+				good_points1.push_back(src_pts[j]);
+				good_points2.push_back(dst_pts[j]);
+				// points distance		
+				dx_vec.push_back(src_pts[j].x - dst_pts[j].x);
+				dy_vec.push_back(src_pts[j].y - dst_pts[j].y);
+			}
+		}
+
+		cout << "After homography test = " << good_points1.size() << endl;
+
+		if (SLOW_MODE) {
+			Mat out1, out2, out3;
+			cv::drawMatches(imgs[i], kp_vector[i], imgs[i + 1], kp_vector[i + 1], matches, out1);
+			cv::imshow("Matches", out1);
+			cv::drawMatches(imgs[i], kp_vector[i], imgs[i + 1], kp_vector[i + 1], good_matches, out2);
+			cv::imshow("After Lowe", out2);
+			cv::drawMatches(imgs[i], kp_vector[i], imgs[i + 1], kp_vector[i + 1], very_good_matches, out3);
+			cv::imshow("After Homography", out3);
+			cv::waitKey(0);
+		}
+
 		//calculate mean distance
-		float dx_avg = accumulate(dx_vec.begin(), dx_vec.end(), 0.0) / size(good_matches);
-		float dy_avg = accumulate(dy_vec.begin(), dy_vec.end(), 0.0) / size(good_matches);
+		float dx_avg = accumulate(dx_vec.begin(), dx_vec.end(), 0.0) / size(dx_vec);
+		float dy_avg = accumulate(dy_vec.begin(), dy_vec.end(), 0.0) / size(dy_vec);
 		
 		//calculate mode
 		//int dx_avg = mode(dx_vec);
 		//int dy_avg = mode(dy_vec);
-
+	
 		//push em
 		dx_avgs.push_back(cvRound(dx_avg));
 		dy_avgs.push_back(cvRound(dy_avg));
 
-		std::cout << "dx_avg = " << dx_avg << endl;
-		std::cout << "dy_avg = " << dy_avg << endl;
+		std::cout << "dx_avg = " << dx_avgs[i] << endl;
+		std::cout << "dy_avg = " << dy_avgs[i] << endl;
 
-		good_matches_vec.push_back(good_matches); //add this vector of good matches to the vector of vectors of good matches
-
-		if (SLOW_MODE) {
-			Mat out;
-			cv::drawMatches(imgs[i], kp_vector[i], imgs[i+1], kp_vector[i + 1], good_matches, out);
-			cv::imshow("Matches", out);
-			cv::waitKey(0);
-		}
 	}
+	cout << endl;
 }
 
 
@@ -114,14 +146,12 @@ Mat PanoramicImage::compute_panorama() {
 	int out_rows = imgs[0].rows;
 	int out_cols = 0;
 
-	
 	//get x displacement and crop each image
 	int bef_cut = 0;
 	int aft_cut = imgs[0].cols - (dx_avgs[0] - dx_avgs[0] / 2);
 	vector<int> x_disp = {0};
 	vector<Mat> cropped_imgs = {imgs[0].colRange(0,aft_cut)};
 	for (int i = 1; i < dx_avgs.size(); i++) {
-		
 		bef_cut = dx_avgs[i-1] - dx_avgs[i-1] / 2;
 		aft_cut = dx_avgs[i] / 2;
 		x_disp.push_back(cropped_imgs[i-1].cols + x_disp[i-1]);
@@ -177,7 +207,6 @@ Mat PanoramicImage::compute_panorama() {
 
 	return out;
 }
-
 
 
 float mode(std::vector<int> vec) {

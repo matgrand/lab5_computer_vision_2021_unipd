@@ -2,7 +2,6 @@
 #include <opencv2/core/utils/filesystem.hpp>
 #include "panoramic_utils.h"
 
-#define SLOW_MODE false
 
 using namespace cv;
 using namespace std;
@@ -33,10 +32,10 @@ public:
 	vector<Mat> sift_masks;
 	vector<Mat> sift_descriptors;
 	vector<vector<vector<DMatch>>> matches_vec;
-	vector<vector<DMatch>> good_matches_vec;
 
 	vector<int> dx_avgs;
 	vector<int> dy_avgs;
 
+	vector<Mat> H_vec;
 };
 

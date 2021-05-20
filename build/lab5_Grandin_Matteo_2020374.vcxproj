@@ -318,14 +318,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\irong\Documents\University_Offline\Magistrale_control_systems\Computer_vision\lab5\PanoramicImage.cpp" />
     <ClInclude Include="C:\Users\irong\Documents\University_Offline\Magistrale_control_systems\Computer_vision\lab5\panoramic_utils.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="C:\Users\irong\Documents\University_Offline\Magistrale_control_systems\Computer_vision\lab5\build\ZERO_CHECK.vcxproj">
-      <Project>{839BAB91-B505-3DDF-AC59-6AA64E5FC36A}</Project>
-      <Name>ZERO_CHECK</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
